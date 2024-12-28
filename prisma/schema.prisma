@@ -8,35 +8,36 @@ datasource db {
 
 generator client {
   provider      = "prisma-client-js"
-  binaryTargets = ["native", "linux-musl"]
+  binaryTargets = ["native", "linux-musl", "linux-musl-arm64-openssl-3.0.x"]
+  previewFeatures = ["omitApi"]
 }
 
 model User {
-  id         Int      @id @default(autoincrement())
-  email      String   @unique
-  first_name String?
-  last_name  String?
+  id         String       @id @default(uuid())
+  username   String       @unique
+  email      String?      @unique
   password   String
-  profile    String?
-  created_at DateTime @default(now())
-  updated_at DateTime @updatedAt
-  posts      Post[]
-
-  @@map("users")
+  created_at DateTime     @default(now())
+  updated_at DateTime     @updatedAt
+  posts      Message[]
 }
 
-model Post {
-  id         Int      @id @default(autoincrement())
-  content    String
-  view_count Int
-  created_at DateTime @default(now())
-  updated_at DateTime @updatedAt
-  created_by User     @relation(fields: [author_id], references: [id])
-  author_id  Int
+model Message {
+  id              String        @id @default(uuid())
+  content         String?
+  // attachments     Attachment[]
+  mimetype        String?
+  created_at      DateTime      @default(now())
+  updated_at      DateTime      @updatedAt
+  created_by      User          @relation(fields: [author_id], references: [id])
+  author_id       String
 }
 
-enum Role {
-  USER
-  ADMIN
-  DEV
-}
+// model Attachment {
+//   id         String   @id @default(uuid())
+//   file_name  String
+//   file_type  String
+//   file_size  Int
+//   message_id String
+//   message    Message  @relation(fields: [message_id], references: [id])
+// }

@@ -1,51 +1,35 @@
 import { FastifyInstance } from 'fastify';
 import * as controllers from '../controllers';
 import { utils } from '../utils';
-import { loginSchema, signupSchema } from '../schemas/User';
+import { loginSchema, registerSchema } from '../schemas/User';
 
 async function userRouter(fastify: FastifyInstance) {
   fastify.post(
     '/login',
     {
       schema: {
-        body: {
-          type: 'object',
-          required: ['email', 'password'],
-          properties: {
-            email: { type: 'string', format: 'email' },
-            password: { type: 'string', minLength: 8 },
-          },
-        },
+        body: loginSchema,
       },
       config: {
         description: 'User login endpoint',
       },
-      preValidation: utils.preValidation(loginSchema),
+      preValidation: [utils.preValidation(loginSchema)],
     },
     controllers.login,
   );
 
   fastify.post(
-    '/signup',
+    '/register',
     {
       schema: {
-        body: {
-          type: 'object',
-          required: ['email', 'password'],
-          properties: {
-            email: { type: 'string', format: 'email' },
-            password: { type: 'string', minLength: 8 },
-            firstName: { type: 'string' },
-            lastName: { type: 'string' },
-          },
-        },
+        body: registerSchema,
       },
       config: {
         description: 'User signup endpoint',
       },
-      preValidation: utils.preValidation(signupSchema),
+      preValidation: [utils.preValidation(registerSchema)],
     },
-    controllers.signUp,
+    controllers.register,
   );
 }
 

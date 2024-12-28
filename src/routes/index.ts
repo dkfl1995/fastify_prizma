@@ -1,2 +1,2 @@
-export * from './post.router';
+export * from './message.router';
 export * from './user.router';

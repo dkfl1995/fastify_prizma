@@ -3,19 +3,21 @@ import Joi from 'joi';
 import dotenv from 'dotenv';
 
 export default function loadConfig(): void {
-  const envPath = path.join(__dirname, '..', '..', '.env');
-
-  const result = dotenv.config({ path: envPath });
-
-  if (result.error) {
-    throw new Error(
-      `Failed to load .env file from path ${envPath}: ${result.error.message}`,
-    );
+  if (process.env.NODE_ENV === 'localhost') {
+    const envPath = path.join(__dirname, '..', '..', '.env');
+  
+    const result = dotenv.config({ path: envPath });
+  
+    if (result.error) {
+      throw new Error(
+        `Failed to load .env file from path ${envPath}: ${result.error.message}`,
+      );
+    }
   }
 
   const schema = Joi.object({
     NODE_ENV: Joi.string()
-      .valid('development', 'testing', 'production')
+      .valid('localhost', 'docker_watch', 'testing', 'production')
       .required(),
     LOG_LEVEL: Joi.string()
       .valid('debug', 'info', 'warn', 'error', 'fatal')

@@ -25,7 +25,7 @@ module.exports = {
         'frontend',
         'backend',
         'docs',
-        'tests',
+        'test',
         'config',
         'chore',
         'build',

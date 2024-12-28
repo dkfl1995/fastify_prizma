@@ -1,88 +1,38 @@
-import { FastifyReply, FastifyRequest } from 'fastify';
-import { prisma } from '../utils';
-import { ERRORS, handleServerError } from '../helpers/errors.helper';
-import * as JWT from 'jsonwebtoken';
-import { utils } from '../utils';
+import { FastifyReply, FastifyRequest, RouteHandlerMethod } from 'fastify';
+import { handleServerError } from '../helpers/errors.helper';
 import { STANDARD } from '../constants/request';
 import { IUserLoginDto, IUserSignupDto } from '../schemas/User';
+import { userService } from '../services/User.service';
 
-export const login = async (
+export const login: RouteHandlerMethod = async (
   request: FastifyRequest<{
     Body: IUserLoginDto;
   }>,
-  reply: FastifyReply,
+  reply,
 ) => {
   try {
-    const { email, password } = request.body;
-    const user = await prisma.user.findUnique({ where: { email } });
-    if (!user) {
-      return reply
-        .code(ERRORS.userNotExists.statusCode)
-        .send(ERRORS.userNotExists.message);
-    }
+    const { username, password } = request.body;
+    const res = await userService.login(username, password);
 
-    const checkPass = await utils.compareHash(password, user.password);
-    if (!checkPass) {
-      return reply
-        .code(ERRORS.userCredError.statusCode)
-        .send(ERRORS.userCredError.message);
-    }
-
-    const token = JWT.sign(
-      {
-        id: user.id,
-        email: user.email,
-      },
-      process.env.APP_JWT_SECRET as string,
-    );
-
-    return reply.code(STANDARD.OK.statusCode).send({
-      token,
-      user,
-    });
+    return reply.code(STANDARD.OK.statusCode).send(res);
   } catch (err) {
-    return handleServerError(reply, err);
+    return handleServerError(reply as unknown as FastifyReply, err);
   }
 };
 
-export const signUp = async (
+export const register: RouteHandlerMethod = async (
   request: FastifyRequest<{
     Body: IUserSignupDto;
   }>,
-  reply: FastifyReply,
+  reply
 ) => {
   try {
-    const { email, password, firstName, lastName } = request.body;
-    const user = await prisma.user.findUnique({ where: { email } });
-    if (user) {
-      return reply.code(ERRORS.userExists.statusCode).send(ERRORS.userExists);
-    }
+    const { email, password, username } = request.body;
 
-    const hashPass = await utils.genSalt(10, password);
-    const createUser = await prisma.user.create({
-      data: {
-        email,
-        first_name: firstName.trim(),
-        last_name: lastName.trim(),
-        password: String(hashPass),
-      },
-    });
+    const res = await userService.register(email, password, username);
 
-    const token = JWT.sign(
-      {
-        id: createUser.id,
-        email: createUser.email,
-      },
-      process.env.APP_JWT_SECRET as string,
-    );
-
-    delete createUser.password;
-
-    return reply.code(STANDARD.OK.statusCode).send({
-      token,
-      user: createUser,
-    });
+    return reply.code(STANDARD.OK.statusCode).send(res);
   } catch (err) {
-    return handleServerError(reply, err);
+    return handleServerError(reply as unknown as FastifyReply, err);
   }
 };

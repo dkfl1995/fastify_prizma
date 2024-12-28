@@ -1,0 +1,55 @@
+services:
+  postgres:
+    image: postgres:latest
+    ports:
+      - 5432:5432
+    environment:
+      - POSTGRES_USER=admin
+      - POSTGRES_PASSWORD=master123
+      - POSTGRES_DB=postgres
+    volumes:
+      - pg_data:/var/lib/postgresql
+    networks:
+      - backend
+
+  api:
+    # adding hot reload for development capability. sync+rebuild strategy
+    develop:
+      watch:
+        - action: sync
+          path: .
+          target: /app
+          ignore:
+            - node_modules/
+            - .git/
+            - .idea/
+            - .vscode/
+            - .docker/
+            - .husky/
+            - ci/
+        - action: rebuild
+          path: package.json
+        - action: sync+restart
+          path: ./prisma/migrations
+          target: /app/prisma/migrations
+    build:
+      dockerfile: Dockerfile
+      context: .
+    ports:
+      - 5001:5001
+    env_file:
+      - .env.docker
+    volumes:
+      - ./uploads:/app/uploads
+    depends_on:
+      - postgres
+    networks:
+      - backend
+
+networks:
+  backend:
+    driver: bridge
+
+volumes:
+  pg_data:
+    driver: local

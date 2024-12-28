@@ -22,22 +22,31 @@ export const utils = {
 
   genSalt: (saltRounds: number, value: string): Promise<string> => {
     return new Promise((resolve, reject) => {
-      bcrypt.genSalt(saltRounds, (err, salt) => {
-        if (err) return reject(err);
-        bcrypt.hash(value, salt, (err, hash) => {
-          if (err) return reject(err);
-          resolve(hash);
-        });
-      });
+      try {
+        if (!value) {
+          throw new Error('Value is required');
+        }
+
+        const hash = bcrypt.hashSync(value, saltRounds);
+        resolve(hash);
+      } catch (e) {
+        reject(e);
+      }
     });
   },
 
-  compareHash: (hash: string, value: string): Promise<boolean> => {
+  compareHash: (value: string, hash: string): Promise<boolean> => {
     return new Promise((resolve, reject) => {
-      bcrypt.compare(value, hash, (err, result) => {
-        if (err) return reject(err);
+      try {
+        if (!value || !hash) {
+          throw new Error('Value and hash are required');
+        }
+
+        const result = bcrypt.compareSync(value, hash);
         resolve(result);
-      });
+      } catch (e) {
+        reject(e);
+      }
     });
   },
 
@@ -76,8 +85,8 @@ export const utils = {
 
   preValidation: (schema: Joi.ObjectSchema) => {
     return (
-      request: FastifyRequest,
-      reply: FastifyReply,
+      request,
+      reply,
       done: (err?: Error) => void,
     ) => {
       const { error } = schema.validate(request.body);

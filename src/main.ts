@@ -1,31 +1,54 @@
 import fastify from 'fastify';
-import pino from 'pino';
 import userRouter from './routes/user.router';
-import postRouter from './routes/post.router';
+import postRouter from './routes/message.router';
 import loadConfig from './config/env.config';
 import { utils } from './utils';
 import formbody from '@fastify/formbody';
 import cors from '@fastify/cors';
 import helmet from '@fastify/helmet';
+import multipart from '@fastify/multipart';
+import JoiCompiler from 'joi-compiler';
+import fs from 'fs';
 
+const joiSchemaCompiler = JoiCompiler();
 loadConfig();
 
 const port = Number(process.env.API_PORT) || 5001;
 const host = String(process.env.API_HOST);
 
+const checkDynamicFolders = () => {
+  try {
+    const info = fs.statSync('./uploads');
+    // check if uploads folder exists
+    if (!info.isDirectory()) {
+      fs.mkdirSync('./uploads');
+    }
+  } catch (e) {
+    e.code === 'ENOENT' && fs.mkdirSync('./uploads');
+  }
+}
+
 const startServer = async () => {
+  checkDynamicFolders();
   const server = fastify({
-    logger: pino({ level: process.env.LOG_LEVEL }),
+    logger: { level: process.env.LOG_LEVEL },
+    schemaController: { 
+      bucket: joiSchemaCompiler.bucket, 
+      compilersFactory: {
+        buildValidator: joiSchemaCompiler.buildValidator,
+      } 
+    },
   });
 
   // Register middlewares
   server.register(formbody);
   server.register(cors);
   server.register(helmet);
+  server.register(multipart)
 
   // Register routes
-  server.register(userRouter, { prefix: '/api/user' });
-  server.register(postRouter, { prefix: '/api/post' });
+  server.register(userRouter, { prefix: '/api/account' });
+  server.register(postRouter, { prefix: '/api/message' });
 
   // Set error handler
   server.setErrorHandler((error, _request, reply) => {

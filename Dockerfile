@@ -2,15 +2,16 @@ FROM node:20-alpine
 
 WORKDIR /app
 
-COPY package.json package-lock.json ./
-COPY prisma ./prisma/
+RUN apk update \
+	&& apk add --no-cache openssl
 
-RUN npm install --legacy-peer-deps
-
-RUN npm run db:gen
 
 COPY . .
 
+RUN npm install
+
+RUN npm run db:gen
+
 EXPOSE 5001
 
-CMD [ "npm", "run", "dev" ]
+CMD npx prisma migrate deploy && npm run dev

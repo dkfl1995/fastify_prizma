@@ -19,9 +19,10 @@ export const ERRORS = {
   invalidRequest: new AppError('Invalid Token', 400),
   internalServerError: new AppError('Internal Server Error', 500),
   unauthorizedAccess: new AppError('Unauthorized access', 401),
+  messageNotFound: new AppError('Message not found', 404),
 };
 
-export function handleServerError(reply: FastifyReply, error: any) {
+export function handleServerError(reply: FastifyReply, error: unknown) {
   if (error instanceof AppError) {
     return reply.status(error.statusCode).send({ message: error.message });
   }

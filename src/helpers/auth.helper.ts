@@ -1,11 +1,12 @@
 import { utils } from '../utils';
-import { FastifyRequest, FastifyReply } from 'fastify';
+import { FastifyRequest, FastifyReply, preValidationAsyncHookHandler } from 'fastify';
 import { prisma } from '../utils';
 import { ERRORS } from './errors.helper';
 
 export const checkValidRequest = (
   request: FastifyRequest,
   reply: FastifyReply,
+  next: () => void,
 ) => {
   const token = utils.getTokenFromHeader(request.headers.authorization);
   if (!token) {
@@ -20,11 +21,12 @@ export const checkValidRequest = (
       .code(ERRORS.unauthorizedAccess.statusCode)
       .send(ERRORS.unauthorizedAccess.message);
   }
+  next();
 };
 
 export const checkValidUser = async (
-  request: FastifyRequest,
-  reply: FastifyReply,
+  request,
+  reply,
 ) => {
   const token = utils.getTokenFromHeader(request.headers.authorization);
   if (!token) {
