@@ -60,4 +60,5 @@ profile*
 build/
 
 .env
+.env.*
 dist
